@@ -5,23 +5,26 @@ resource "helm_release" "argocd" {
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
   chart            = "argo-cd"
-  namespace        = "argocd"
+  version          = var.chart_version
+  namespace        = var.namespace
   create_namespace = true
+  atomic           = true
+  cleanup_on_fail  = true
+  wait             = true
+  timeout          = 900
 
   values = [
     yamlencode({
       server = {
         service = {
-          type = "LoadBalancer"
+          type = "ClusterIP"
         }
       }
       configs = {
         params = {
-          "server.insecure" = true
+          "server.insecure" = var.server_insecure
         }
       }
     })
   ]
-
-  depends_on = [module.eks]
 }
