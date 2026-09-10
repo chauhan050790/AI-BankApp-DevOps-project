@@ -1,0 +1,133 @@
+name: Terraform
+
+on:
+  pull_request:
+    paths:
+      - "terraform/**"
+      - ".github/workflows/terraform.yml"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - uat
+          - prod
+      action:
+        description: "Terraform action"
+        required: true
+        default: "plan"
+        type: choice
+        options:
+          - plan
+          - apply
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  TF_IN_AUTOMATION: true
+  AWS_REGION: ap-south-1
+
+jobs:
+  discover:
+    name: Select Environment
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.env.outputs.environment }}
+      action: ${{ steps.env.outputs.action }}
+      working-directory: ${{ steps.env.outputs.working-directory }}
+      runner: ${{ steps.env.outputs.runner }}
+    steps:
+      - name: Resolve inputs
+        id: env
+        run: |
+          ENVIRONMENT="${{ github.event.inputs.environment || 'dev' }}"
+          ACTION="${{ github.event.inputs.action || 'plan' }}"
+          echo "environment=${ENVIRONMENT}" >> "$GITHUB_OUTPUT"
+          echo "action=${ACTION}" >> "$GITHUB_OUTPUT"
+          echo "working-directory=terraform/live/${ENVIRONMENT}" >> "$GITHUB_OUTPUT"
+          if [ "${ENVIRONMENT}" = "prod" ]; then
+            echo "runner=self-hosted" >> "$GITHUB_OUTPUT"
+          else
+            echo "runner=ubuntu-latest" >> "$GITHUB_OUTPUT"
+          fi
+
+  plan:
+    name: Terraform Plan
+    needs: discover
+    runs-on: ${{ needs.discover.outputs.runner }}
+    defaults:
+      run:
+        working-directory: ${{ needs.discover.outputs.working-directory }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive ../..
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        run: terraform plan -input=false -out=tfplan
+
+      - name: Upload plan
+        if: needs.discover.outputs.action == 'apply'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ needs.discover.outputs.environment }}
+          path: ${{ needs.discover.outputs.working-directory }}/tfplan
+
+  apply:
+    name: Terraform Apply
+    needs:
+      - discover
+      - plan
+    if: needs.discover.outputs.action == 'apply'
+    runs-on: ${{ needs.discover.outputs.runner }}
+    environment: ${{ needs.discover.outputs.environment }}
+    defaults:
+      run:
+        working-directory: ${{ needs.discover.outputs.working-directory }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Download plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-${{ needs.discover.outputs.environment }}
+          path: ${{ needs.discover.outputs.working-directory }}
+
+      - name: Terraform apply
+        run: terraform apply -input=false -auto-approve tfplan
