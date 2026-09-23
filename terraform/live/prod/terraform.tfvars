@@ -35,7 +35,7 @@ enable_flow_log    = true
 
 cluster_name         = "ai-bankapp-prod"
 cluster_version      = "1.35"
-node_instance_type   = "m7i-flex.large"
+node_instance_type   = "c7i-flex.large"
 image_tag_mutability = "IMMUTABLE"
 
 desired_size = 3

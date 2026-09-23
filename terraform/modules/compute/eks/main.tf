@@ -37,9 +37,19 @@ module "eks" {
     }
 
     aws-ebs-csi-driver = {
-      most_recent = true
+      most_recent                 = true
+      resolve_conflicts_on_create = "OVERWRITE"
+      resolve_conflicts_on_update = "OVERWRITE"
+
+      pod_identity_association = [
+        {
+          role_arn        = aws_iam_role.ebs_csi.arn
+          service_account = "ebs-csi-controller-sa"
+        }
+      ]
     }
   }
+
 
   eks_managed_node_groups = local.node_groups
 
