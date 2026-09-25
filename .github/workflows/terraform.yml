@@ -99,7 +99,7 @@ jobs:
 
       - name: Upload plan
         if: needs.discover.outputs.action == 'apply'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tfplan-${{ needs.discover.outputs.environment }}
           path: ${{ needs.discover.outputs.working-directory }}/tfplan
