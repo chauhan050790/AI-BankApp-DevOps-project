@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DOCKERHUB_REPO: trainwithshubham/ai-bankapp-eks
+  DOCKERHUB_REPO: devops8266vipin/ai-bankapp-eks
 
 jobs:
   build-and-push:
@@ -68,7 +68,7 @@ jobs:
 
       - name: Update Kubernetes deployment manifest
         run: |
-          sed -i "s|image: ${{ env.DOCKERHUB_REPO }}:.*|image: ${{ env.DOCKERHUB_REPO }}:${{ steps.tag.outputs.sha_short }}|" k8s/bankapp-deployment.yml
+          sed -i "s|image: .*/ai-bankapp-eks:.*|image: ${{ env.DOCKERHUB_REPO }}:${{ steps.tag.outputs.sha_short }}|" k8s/bankapp-deployment.yml
 
       - name: Commit updated manifest
         run: |

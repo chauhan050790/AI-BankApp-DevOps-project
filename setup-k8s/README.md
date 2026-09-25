@@ -40,7 +40,7 @@ chmod +x kind && sudo mv kind /usr/local/bin/
 ## 1. Build the BankApp image
 
 ```bash
-docker build -t trainwithshubham/bankapp:k8s .
+docker build -t devops8266vipin/ai-bankapp-eks:k8s .
 ```
 
 ## 2. Create the cluster
@@ -54,7 +54,7 @@ kind create cluster --config setup-k8s/kind-config.yml
 Kind can't pull from your local Docker daemon — you need to explicitly load images into the cluster.
 
 ```bash
-kind load docker-image trainwithshubham/bankapp:k8s --name tws-cluster
+kind load docker-image devops8266vipin/ai-bankapp-eks:k8s --name tws-cluster
 ```
 
 ## 4. Install metrics-server
