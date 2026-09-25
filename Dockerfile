@@ -8,6 +8,10 @@ COPY mvnw pom.xml ./
 RUN chmod +x mvnw && ./mvnw -B -ntp dependency:go-offline
 
 COPY src/ src/
+COPY k8s/ k8s/
+COPY helm/ helm/
+COPY .github/ .github/
+COPY docker-compose.yml ./
 RUN ./mvnw -B -ntp clean verify
 
 FROM eclipse-temurin:21-jre-alpine AS runtime
