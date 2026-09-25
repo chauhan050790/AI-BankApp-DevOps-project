@@ -136,3 +136,13 @@ variable "argocd_server_insecure" {
   type    = bool
   default = false
 }
+
+variable "argocd_high_availability" {
+  type    = bool
+  default = false
+}
+
+variable "metrics_server_replica_count" {
+  type    = number
+  default = 2
+}

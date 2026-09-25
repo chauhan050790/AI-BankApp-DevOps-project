@@ -33,12 +33,12 @@ enable_flow_log    = true
 
 cluster_version      = "1.35"
 cluster_name         = "ai-bankapp-dev"
-node_instance_type   = "m7i-flex.large"
+node_instance_type   = "c7i-flex.large"
 image_tag_mutability = "MUTABLE"
 
 desired_size = 1
 min_size     = 1
-max_size     = 2
+max_size     = 1
 
 endpoint_public_access  = true
 endpoint_private_access = true
@@ -48,10 +48,12 @@ cluster_endpoint_public_access_cidrs = [
 
 system_desired_size      = 1
 system_min_size          = 1
-system_max_size          = 2
+system_max_size          = 1
 application_desired_size = 1
 application_min_size     = 1
-application_max_size     = 2
+application_max_size     = 1
 node_disk_size           = 50
 
-argocd_server_insecure = true
+argocd_server_insecure       = true
+argocd_high_availability     = false
+metrics_server_replica_count = 1

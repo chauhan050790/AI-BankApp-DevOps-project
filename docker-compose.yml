@@ -1,43 +1,41 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: bankapp-mysql
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: Test@123
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
       MYSQL_DATABASE: bankappdb
-    ports:
-      - "3306:3306"
+      MYSQL_USER: ${MYSQL_USER:-bankapp}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
       start_period: 30s
     networks:
       - bankapp-net
 
   ollama:
     image: ollama/ollama
-    container_name: bankapp-ollama
-    ports:
-      - "11434:11434"
+    restart: unless-stopped
     volumes:
       - ollama-data:/root/.ollama
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 15s
     networks:
       - bankapp-net
 
   ollama-pull-model:
     image: ollama/ollama
-    container_name: ollama-pull-model
     environment:
-      - OLLAMA_HOST=ollama
+      OLLAMA_HOST: http://ollama:11434
     volumes:
       - ollama-data:/root/.ollama
     depends_on:
@@ -45,26 +43,36 @@ services:
         condition: service_healthy
     entrypoint: /bin/sh
     command: -c "ollama pull tinyllama"
+    restart: "no"
     networks:
       - bankapp-net
 
   bankapp:
     build: .
-    container_name: bankapp
+    restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "${APP_PORT:-8080}:8080"
     environment:
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306
       MYSQL_DATABASE: bankappdb
-      MYSQL_USER: root
-      MYSQL_PASSWORD: Test@123
+      MYSQL_USER: ${MYSQL_USER:-bankapp}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
+      MYSQL_SSL_MODE: DISABLED
+      SESSION_COOKIE_SECURE: "false"
       OLLAMA_URL: http://ollama:11434
     depends_on:
       mysql:
         condition: service_healthy
       ollama-pull-model:
         condition: service_completed_successfully
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     networks:
       - bankapp-net
 

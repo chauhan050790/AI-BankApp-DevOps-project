@@ -1,6 +1,6 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 21.0"
+  version = "21.24.1"
 
   name               = local.cluster_name
   kubernetes_version = var.cluster_version
@@ -22,6 +22,13 @@ module "eks" {
     vpc-cni = {
       most_recent    = true
       before_compute = true
+      configuration_values = jsonencode({
+        enableNetworkPolicy = "true"
+        nodeAgent = {
+          healthProbeBindAddr = "8163"
+          metricsBindAddr     = "8162"
+        }
+      })
     }
 
     coredns = {
@@ -37,9 +44,19 @@ module "eks" {
     }
 
     aws-ebs-csi-driver = {
-      most_recent = true
+      most_recent                 = true
+      resolve_conflicts_on_create = "OVERWRITE"
+      resolve_conflicts_on_update = "OVERWRITE"
+
+      pod_identity_association = [
+        {
+          role_arn        = aws_iam_role.ebs_csi.arn
+          service_account = "ebs-csi-controller-sa"
+        }
+      ]
     }
   }
+
 
   eks_managed_node_groups = local.node_groups
 

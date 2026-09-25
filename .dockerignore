@@ -1,0 +1,12 @@
+.git
+.idea
+.vscode
+.agents
+target
+terraform
+screenshots
+*.tfstate
+*.tfplan
+.env
+DEPLOYMENT.md
+README.md

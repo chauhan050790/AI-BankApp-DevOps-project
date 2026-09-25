@@ -38,6 +38,13 @@ build/
 *.tfstate.backup
 *.tfplan
 
+### Local secrets ###
+.env
+.env.*
+!.env.example
+secrets.local.yml
+bankapp-secret.env
+
 ### Claude ###
 CLAUDE.md
 

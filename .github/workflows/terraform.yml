@@ -31,7 +31,12 @@ permissions:
 
 env:
   TF_IN_AUTOMATION: true
+  TF_INPUT: false
   AWS_REGION: ap-south-1
+
+concurrency:
+  group: terraform-${{ github.event.inputs.environment || 'dev' }}
+  cancel-in-progress: false
 
 jobs:
   discover:
@@ -61,6 +66,7 @@ jobs:
     name: Terraform Plan
     needs: discover
     runs-on: ${{ needs.discover.outputs.runner }}
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: ${{ needs.discover.outputs.working-directory }}
@@ -76,6 +82,8 @@ jobs:
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.7
 
       - name: Terraform fmt
         run: terraform fmt -check -recursive ../..
@@ -87,7 +95,7 @@ jobs:
         run: terraform validate
 
       - name: Terraform plan
-        run: terraform plan -input=false -out=tfplan
+        run: terraform plan -input=false -lock-timeout=5m -out=tfplan
 
       - name: Upload plan
         if: needs.discover.outputs.action == 'apply'
@@ -95,6 +103,7 @@ jobs:
         with:
           name: tfplan-${{ needs.discover.outputs.environment }}
           path: ${{ needs.discover.outputs.working-directory }}/tfplan
+          retention-days: 1
 
   apply:
     name: Terraform Apply
@@ -103,6 +112,7 @@ jobs:
       - plan
     if: needs.discover.outputs.action == 'apply'
     runs-on: ${{ needs.discover.outputs.runner }}
+    timeout-minutes: 45
     environment: ${{ needs.discover.outputs.environment }}
     defaults:
       run:
@@ -119,6 +129,8 @@ jobs:
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.7
 
       - name: Terraform init
         run: terraform init -input=false
@@ -130,4 +142,4 @@ jobs:
           path: ${{ needs.discover.outputs.working-directory }}
 
       - name: Terraform apply
-        run: terraform apply -input=false -auto-approve tfplan
+        run: terraform apply -input=false -lock-timeout=5m -auto-approve tfplan

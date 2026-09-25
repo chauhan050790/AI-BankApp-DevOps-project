@@ -1,5 +1,6 @@
 resource "aws_iam_role" "this" {
-  name = "${var.project_name}-${var.environment}-alb-controller"
+  name        = "${var.project_name}-${var.environment}-alb-controller"
+  description = "IRSA role for the AWS Load Balancer Controller on ${var.cluster_name}"
 
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 

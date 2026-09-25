@@ -27,13 +27,13 @@
             <form th:action="@{/login}" method="post">
                 <div class="form-floating mb-3">
                     <input type="text" class="form-control" id="username" name="username"
-                           placeholder="Username" required autofocus>
+                           placeholder="Username" required autofocus autocomplete="username">
                     <label for="username"><i class="bi bi-person"></i> Username</label>
                 </div>
 
                 <div class="form-floating mb-3 input-group-password">
                     <input type="password" class="form-control" id="password" name="password"
-                           placeholder="Password" required>
+                           placeholder="Password" required autocomplete="current-password">
                     <label for="password"><i class="bi bi-lock"></i> Password</label>
                     <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
                         <i class="bi bi-eye"></i>

@@ -13,19 +13,22 @@
             </div>
 
             <div th:if="${error}" class="alert alert-glass mb-3 text-center">
-                <i class="bi bi-exclamation-circle"></i> Username already taken. Please choose another.
+                <i class="bi bi-exclamation-circle"></i> <span th:text="${error}">Registration failed.</span>
             </div>
 
             <form th:action="@{/register}" method="post">
                 <div class="form-floating mb-3">
                     <input type="text" class="form-control" id="username" name="username"
-                           placeholder="Username" required autofocus>
+                           placeholder="Username" required autofocus minlength="3" maxlength="50"
+                           pattern="[A-Za-z0-9._-]+" autocomplete="username"
+                           th:value="${username}">
                     <label for="username"><i class="bi bi-person"></i> Username</label>
                 </div>
 
                 <div class="form-floating mb-3 input-group-password">
                     <input type="password" class="form-control" id="password" name="password"
-                           placeholder="Password" required minlength="4"
+                           placeholder="Password" required minlength="12" maxlength="72"
+                           autocomplete="new-password"
                            oninput="updateStrength(this.value)">
                     <label for="password"><i class="bi bi-lock"></i> Password</label>
                     <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
@@ -72,8 +75,8 @@
         const bar = document.getElementById('strengthBar');
         const text = document.getElementById('strengthText');
         let strength = 0;
-        if (val.length >= 4) strength++;
         if (val.length >= 8) strength++;
+        if (val.length >= 12) strength++;
         if (/[A-Z]/.test(val) && /[0-9]/.test(val)) strength++;
         if (/[^A-Za-z0-9]/.test(val)) strength++;
 

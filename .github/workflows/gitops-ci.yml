@@ -2,7 +2,7 @@ name: GitOps CI - Build & Push to DockerHub
 
 on:
   push:
-    branches: [feat/gitops]
+    branches: [main]
     paths:
       - 'src/**'
       - 'pom.xml'
@@ -12,6 +12,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: gitops-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   DOCKERHUB_REPO: trainwithshubham/ai-bankapp-eks
 
@@ -19,6 +23,7 @@ jobs:
   build-and-push:
     name: Build, Test & Push Docker Image
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout code
@@ -31,12 +36,8 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Build with Maven
-        run: ./mvnw clean package -DskipTests -B
-
-      - name: Run tests
-        run: ./mvnw test -B
-        continue-on-error: true
+      - name: Verify with Maven
+        run: ./mvnw clean verify -B -ntp
 
       - name: Set image tag
         id: tag
@@ -55,7 +56,10 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          platforms: linux/amd64
           push: true
+          provenance: true
+          sbom: true
           tags: |
             ${{ env.DOCKERHUB_REPO }}:latest
             ${{ env.DOCKERHUB_REPO }}:${{ steps.tag.outputs.sha_short }}

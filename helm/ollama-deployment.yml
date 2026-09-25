@@ -14,9 +14,15 @@ spec:
       labels:
         app: ollama
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: ollama
           image: ollama/ollama:latest
+          securityContext:
+            allowPrivilegeEscalation: false
           ports:
             - containerPort: 11434
           resources:

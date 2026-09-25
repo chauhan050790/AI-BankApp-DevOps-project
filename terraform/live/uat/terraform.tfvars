@@ -31,7 +31,7 @@ enable_flow_log    = true
 
 cluster_name         = "ai-bankapp-uat"
 cluster_version      = "1.35"
-node_instance_type   = "m7i-flex.large"
+node_instance_type   = "c7i-flex.large"
 image_tag_mutability = "IMMUTABLE"
 
 desired_size = 2
@@ -44,12 +44,14 @@ cluster_endpoint_public_access_cidrs = [
   "0.0.0.0/0"
 ]
 
-system_desired_size      = 2
-system_min_size          = 2
-system_max_size          = 3
-application_desired_size = 2
-application_min_size     = 2
-application_max_size     = 4
+system_desired_size      = 1
+system_min_size          = 1
+system_max_size          = 1
+application_desired_size = 1
+application_min_size     = 1
+application_max_size     = 1
 node_disk_size           = 80
 
-argocd_server_insecure = false
+argocd_server_insecure       = false
+argocd_high_availability     = false
+metrics_server_replica_count = 2

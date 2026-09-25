@@ -111,7 +111,7 @@ Order matters — namespace and config first, then storage, then workloads.
 ```bash
 kubectl apply -f k8s/namespace.yml
 kubectl apply -f k8s/configmap.yml
-kubectl apply -f k8s/secrets.yml
+# Create bankapp-secret out of band first; see PRODUCTION.md.
 kubectl apply -f k8s/pv.yml
 kubectl apply -f k8s/pvc.yml
 kubectl apply -f k8s/mysql-deployment.yml
@@ -119,6 +119,8 @@ kubectl apply -f k8s/ollama-deployment.yml
 kubectl apply -f k8s/bankapp-deployment.yml
 kubectl apply -f k8s/service.yml
 kubectl apply -f k8s/hpa.yml
+kubectl apply -f k8s/availability.yml
+kubectl apply -f k8s/network-policy.yml
 ```
 
 ## 7. Verify
