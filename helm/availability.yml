@@ -1,0 +1,27 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: bankapp
+  namespace: bankapp
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: bankapp
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: bankapp
+  namespace: bankapp
+  labels:
+    release: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: bankapp
+  endpoints:
+    - port: management
+      path: /actuator/prometheus
+      interval: 30s
+      scrapeTimeout: 10s

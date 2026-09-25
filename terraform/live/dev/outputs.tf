@@ -26,3 +26,11 @@ output "cluster_endpoint" {
 output "ecr_repository_url" {
   value = module.ecr.repository_url
 }
+
+output "argocd_namespace" {
+  value = module.argocd.argocd_namespace
+}
+
+output "aws_load_balancer_controller_role_arn" {
+  value = module.aws_load_balancer_controller.iam_role_arn
+}

@@ -1,0 +1,32 @@
+# AWS Load Balancer Controller creates the ALB for this Ingress. The matching
+# ACM certificate must exist in the cluster region before this resource syncs.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bankapp
+  namespace: bankapp
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/healthcheck-path: /login
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/success-codes: "200"
+    alb.ingress.kubernetes.io/load-balancer-attributes: routing.http.drop_invalid_header_fields.enabled=true,idle_timeout.timeout_seconds=60
+spec:
+  ingressClassName: alb
+  tls:
+    - hosts:
+        - bankapp.trainwithshubham.com
+  rules:
+    - host: bankapp.trainwithshubham.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: bankapp-service
+                port:
+                  number: 8080

@@ -54,4 +54,6 @@ application_min_size     = 1
 application_max_size     = 1
 node_disk_size           = 50
 
-argocd_server_insecure = true
+argocd_server_insecure       = true
+argocd_high_availability     = false
+metrics_server_replica_count = 1

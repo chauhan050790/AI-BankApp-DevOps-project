@@ -1,6 +1,6 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 21.0"
+  version = "21.24.1"
 
   name               = local.cluster_name
   kubernetes_version = var.cluster_version
@@ -22,6 +22,13 @@ module "eks" {
     vpc-cni = {
       most_recent    = true
       before_compute = true
+      configuration_values = jsonencode({
+        enableNetworkPolicy = "true"
+        nodeAgent = {
+          healthProbeBindAddr = "8163"
+          metricsBindAddr     = "8162"
+        }
+      })
     }
 
     coredns = {

@@ -4,10 +4,10 @@
 
 ### End-to-End GitOps on Amazon EKS
 
-A modern banking application with an integrated AI chatbot, deployed on AWS EKS using Terraform, ArgoCD, Gateway API, and Prometheus monitoring.
+A modern banking application with an integrated AI chatbot, deployed on AWS EKS using Terraform, Argo CD, the AWS Load Balancer Controller, and Prometheus monitoring.
 
 [![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.1-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.13-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Kubernetes](https://img.shields.io/badge/EKS-1.35-326CE5?logo=kubernetes&logoColor=white)](https://aws.amazon.com/eks/)
 [![ArgoCD](https://img.shields.io/badge/ArgoCD-GitOps-EF7B4D?logo=argo&logoColor=white)](https://argo-cd.readthedocs.io/)
 [![Terraform](https://img.shields.io/badge/Terraform-IaC-844FBA?logo=terraform&logoColor=white)](https://www.terraform.io/)
@@ -29,7 +29,7 @@ A modern banking application with an integrated AI chatbot, deployed on AWS EKS 
 - **AI Chatbot** — Context-aware financial assistant powered by Ollama (TinyLlama), self-hosted on Kubernetes
 - **Dark/Light Mode** — Glassmorphism UI with theme toggle and localStorage persistence
 - **Spring Security** — BCrypt password hashing, CSRF protection, form-based authentication
-- **Prometheus Metrics** — Built-in `/actuator/prometheus` endpoint for monitoring
+- **Prometheus Metrics** — Internal management endpoint scraped through a `ServiceMonitor`
 
 ---
 
@@ -46,8 +46,8 @@ A modern banking application with an integrated AI chatbot, deployed on AWS EKS 
 | **Infrastructure** | Terraform (VPC + EKS + ArgoCD) |
 | **CI Pipeline** | GitHub Actions → DockerHub |
 | **GitOps / CD** | ArgoCD (auto-sync from `k8s/` manifests) |
-| **Ingress** | Gateway API + Envoy Gateway (AWS NLB) |
-| **TLS** | cert-manager + Let's Encrypt (auto-provisioned) |
+| **Ingress** | AWS Load Balancer Controller (ALB, IP targets) |
+| **TLS** | AWS Certificate Manager with HTTP-to-HTTPS redirect |
 | **Monitoring** | kube-prometheus-stack (Prometheus + Grafana) |
 | **AI Chatbot** | Ollama (TinyLlama) on EKS |
 | **Storage** | EBS CSI Driver (gp3 dynamic provisioning) |
@@ -58,11 +58,11 @@ A modern banking application with an integrated AI chatbot, deployed on AWS EKS 
 
 | Resource | Details |
 |----------|---------|
-| **EKS Cluster** | Kubernetes 1.35, 3x `t3.medium` across 3 AZs |
+| **EKS Cluster** | Kubernetes 1.35 with separate system and application node groups |
 | **BankApp** | 2 replicas with HPA (scales to 4), rolling updates |
 | **MySQL 8.0** | Persistent EBS volume (gp3) |
 | **Ollama AI** | TinyLlama model with persistent storage |
-| **Gateway** | HTTPS with Let's Encrypt TLS, session persistence |
+| **Ingress** | Internet-facing ALB with ACM TLS and HTTP-to-HTTPS redirects |
 | **Monitoring** | Prometheus + Grafana dashboards |
 | **ArgoCD** | Auto-sync, self-heal, prune |
 
@@ -73,14 +73,17 @@ A modern banking application with an integrated AI chatbot, deployed on AWS EKS 
 > Full step-by-step commands with troubleshooting: [`DEPLOYMENT.md`](DEPLOYMENT.md)
 
 ```bash
-# 1. Provision infrastructure (~15 min)
-cd terraform && terraform init && terraform apply
+# 1. Provision an environment (~20 min)
+cd terraform/live/dev
+terraform init
+terraform plan -out=tfplan
+terraform apply tfplan
 
 # 2. Configure kubectl
-aws eks update-kubeconfig --name bankapp-eks --region us-west-2
+aws eks update-kubeconfig --name ai-bankapp-dev --region ap-south-1
 
-# 3. Install Envoy Gateway + cert-manager + Prometheus
-#    (see DEPLOYMENT.md Steps 4-6)
+# 3. Request/validate the ACM certificate named in k8s/ingress.yml
+#    and point its DNS name to the ALB after the first Argo CD sync
 
 # 4. Deploy via ArgoCD
 kubectl apply -f argocd/application.yml
@@ -97,7 +100,7 @@ kubectl exec -n bankapp deploy/ollama -- ollama pull tinyllama
 Code Push → GitHub Actions → Build & Push to DockerHub → Update k8s manifest → ArgoCD auto-sync → EKS
 ```
 
-1. Push code changes to `feat/gitops`
+1. Merge code changes into `main`
 2. **GitHub Actions** builds the app, pushes Docker image to DockerHub with commit SHA tag
 3. Workflow updates `k8s/bankapp-deployment.yml` with new image tag and commits back
 4. **ArgoCD** detects the manifest change and auto-syncs to EKS
@@ -117,8 +120,7 @@ Code Push → GitHub Actions → Build & Push to DockerHub → Update k8s manife
 │   ├── mysql-deployment.yml
 │   ├── ollama-deployment.yml
 │   ├── service.yml
-│   ├── gateway.yml         # Gateway API + HTTPS + session persistence
-│   ├── cert-manager.yml    # Let's Encrypt ClusterIssuer
+│   ├── ingress.yml         # AWS ALB + ACM HTTPS redirect
 │   ├── hpa.yml             # Horizontal Pod Autoscaler
 │   └── ...                 # namespace, configmap, secrets, pv, pvc
 ├── argocd/
@@ -136,12 +138,13 @@ Code Push → GitHub Actions → Build & Push to DockerHub → Update k8s manife
 |----------|---------|
 | [`DEPLOYMENT.md`](DEPLOYMENT.md) | Step-by-step deployment commands + gotchas |
 | [`terraform/README.md`](terraform/README.md) | Detailed infrastructure setup + troubleshooting |
+| [`PRODUCTION.md`](PRODUCTION.md) | Production configuration, secret handling, and go-live checks |
 
 ---
 
 ## Tech Stack
 
-**Backend:** Java 21, Spring Boot 3.4.1, Spring Security, Thymeleaf, Actuator
+**Backend:** Java 21, Spring Boot 3.4.13, Spring Security, Thymeleaf, Flyway, JDBC Session, Actuator
 
 **Frontend:** Bootstrap 5, glassmorphism dark/light UI, CSS custom properties
 
@@ -149,7 +152,7 @@ Code Push → GitHub Actions → Build & Push to DockerHub → Update k8s manife
 
 **Database:** MySQL 8.0 with EBS gp3 persistent volumes
 
-**DevOps:** Terraform, GitHub Actions, ArgoCD, Envoy Gateway, cert-manager, kube-prometheus-stack
+**DevOps:** Terraform, GitHub Actions, Argo CD, AWS Load Balancer Controller, ACM, kube-prometheus-stack
 
 ---
 

@@ -62,6 +62,8 @@ module "eks" {
 module "metrics_server" {
   source = "../../modules/platform/metrics-server"
 
+  replica_count = var.metrics_server_replica_count
+
   depends_on = [
     module.eks
   ]
@@ -70,7 +72,8 @@ module "metrics_server" {
 module "argocd" {
   source = "../../modules/platform/argocd"
 
-  server_insecure = var.argocd_server_insecure
+  server_insecure   = var.argocd_server_insecure
+  high_availability = var.argocd_high_availability
 
   depends_on = [
     module.eks

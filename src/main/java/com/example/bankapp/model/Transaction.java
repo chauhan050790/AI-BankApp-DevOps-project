@@ -16,14 +16,14 @@ public class Transaction {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 32)
     private String type;
 
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id")
+    @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
     public Transaction() {
