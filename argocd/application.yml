@@ -7,8 +7,12 @@ spec:
   project: default
   source:
     repoURL: https://github.com/chauhan050790/AI-BankApp-DevOps-project.git
-    targetRevision: main
+    targetRevision: dev
     path: k8s
+    directory:
+      # Enable these after installing the Prometheus Operator and issuing an
+      # ACM certificate for the hostname configured in ingress.yml.
+      exclude: "{availability.yml,ingress.yml}"
   destination:
     server: https://kubernetes.default.svc
     namespace: bankapp
