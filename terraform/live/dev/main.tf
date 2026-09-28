@@ -106,3 +106,14 @@ module "aws_load_balancer_controller" {
     module.eks
   ]
 }
+
+module "envoy_gateway" {
+  source = "../../modules/platform/envoy-gateway"
+
+  replica_count = 1
+
+  depends_on = [
+    module.eks,
+    module.aws_load_balancer_controller
+  ]
+}

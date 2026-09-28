@@ -12,9 +12,13 @@ Application workloads remain GitOps-managed from `k8s/`.
 - metrics-server
 - Argo CD (private `ClusterIP`; HA in production)
 - AWS Load Balancer Controller with a tightly scoped IRSA trust policy
+- Envoy Gateway with Gateway API CRDs
 
-The controller reconciles `k8s/ingress.yml` into an internet-facing ALB. Public
-and private subnets carry the AWS load-balancer discovery tags.
+Envoy Gateway creates the data-plane proxy, while the AWS Load Balancer
+Controller reconciles its annotated `LoadBalancer` Service into an
+internet-facing NLB with IP targets. `k8s/gateway.yml` routes public HTTP traffic
+to BankApp through Gateway API resources. Public and private subnets carry the
+AWS load-balancer discovery tags.
 
 ## Layout
 
@@ -30,6 +34,7 @@ terraform/
     compute/ecr/
     compute/eks/
     platform/argocd/
+    platform/envoy-gateway/
     platform/metrics-server/
     platform/aws-load-balancer-controller/
 ```
@@ -94,6 +99,8 @@ kubectl get nodes
 kubectl get deployment -n kube-system aws-load-balancer-controller
 kubectl get deployment -n kube-system metrics-server
 kubectl get pods -n argocd
+kubectl get pods -n envoy-gateway-system
+kubectl get gateway,httproute -n bankapp
 kubectl get ingressclass alb
 ```
 
@@ -103,16 +110,16 @@ Argo CD is not directly exposed. Use a local tunnel:
 kubectl port-forward -n argocd svc/argocd-server 8443:443
 ```
 
-## Ingress and TLS
+## Gateway and TLS
 
-The ALB Ingress requires an issued ACM certificate matching the hostname in
-`k8s/ingress.yml`. The controller discovers the certificate from the Ingress
-host/TLS section. To make selection deterministic, add
-`alb.ingress.kubernetes.io/certificate-arn` to that manifest.
+`k8s/gateway.yml` initially exposes an HTTP listener for connectivity testing.
+Do not transmit real credentials over that endpoint. Before production use,
+configure an HTTPS listener with a certificate stored in a Kubernetes TLS
+Secret and redirect HTTP to HTTPS.
 
-The Ingress uses IP targets, redirects HTTP to HTTPS, drops invalid HTTP header
-fields, and checks `/login`. The namespace enables the controller's pod
-readiness gate injection.
+The Envoy data-plane Service uses an internet-facing AWS NLB with IP targets.
+The legacy `k8s/ingress.yml` remains excluded from the Argo CD Application so
+that it does not create a second public load balancer.
 
 ## GitHub Actions
 
@@ -127,13 +134,13 @@ minimum AWS actions required by the stack.
 
 ## Destroy order
 
-Delete the Argo CD application and wait for its ALB to disappear before
+Delete the Argo CD application and wait for its NLB to disappear before
 destroying EKS. Otherwise, controller-owned load balancers and security groups
 can remain and block VPC deletion.
 
 ```bash
 kubectl delete -f argocd/application.yml
-kubectl wait --for=delete ingress/bankapp -n bankapp --timeout=10m
+kubectl wait --for=delete gateway/bankapp -n bankapp --timeout=10m
 
 cd terraform/live/dev
 terraform plan -destroy -out=destroy.tfplan
