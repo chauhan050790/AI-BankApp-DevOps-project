@@ -2,17 +2,19 @@
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /workspace
 
-# Resolve dependencies before copying application sources to maximize layer reuse.
+# Normalize the wrapper copied from Windows before running it in Linux.
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
-RUN chmod +x mvnw && ./mvnw -B -ntp dependency:go-offline
+RUN sed -i 's/\r$//' mvnw \
+    && chmod +x mvnw
 
 COPY src/ src/
 COPY k8s/ k8s/
 COPY helm/ helm/
 COPY .github/ .github/
 COPY docker-compose.yml ./
-RUN ./mvnw -B -ntp clean verify
+RUN --mount=type=cache,target=/root/.m2 \
+    ./mvnw -B -ntp clean verify
 
 FROM eclipse-temurin:21-jre-alpine AS runtime
 WORKDIR /app
