@@ -56,7 +56,9 @@ metadata:
   namespace: bankapp
 spec:
   parentRefs:
-    - name: bankapp
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: bankapp
       sectionName: http
   rules:
     - matches:
@@ -64,5 +66,8 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: bankapp-service
+        - group: ""
+          kind: Service
+          name: bankapp-service
           port: 8080
+          weight: 1
