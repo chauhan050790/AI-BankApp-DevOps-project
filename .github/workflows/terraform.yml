@@ -136,7 +136,7 @@ jobs:
         run: terraform init -input=false
 
       - name: Download plan
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: tfplan-${{ needs.discover.outputs.environment }}
           path: ${{ needs.discover.outputs.working-directory }}
