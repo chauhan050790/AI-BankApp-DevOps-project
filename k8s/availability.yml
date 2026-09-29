@@ -1,14 +1,3 @@
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: bankapp
-  namespace: bankapp
-spec:
-  minAvailable: 1
-  selector:
-    matchLabels:
-      app: bankapp
----
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:

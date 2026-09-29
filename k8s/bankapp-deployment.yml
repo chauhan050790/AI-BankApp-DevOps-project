@@ -26,6 +26,8 @@ spec:
     metadata:
       labels:
         app: bankapp
+      annotations:
+        bankapp.dev/config-revision: "2"
     spec:
       serviceAccountName: bankapp
       automountServiceAccountToken: false
@@ -39,8 +41,20 @@ spec:
           type: RuntimeDefault
       topologySpreadConstraints:
         - maxSkew: 1
+          minDomains: 2
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          matchLabelKeys:
+            - pod-template-hash
+          labelSelector:
+            matchLabels:
+              app: bankapp
+        - maxSkew: 1
+          minDomains: 2
           topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: ScheduleAnyway
+          whenUnsatisfiable: DoNotSchedule
+          matchLabelKeys:
+            - pod-template-hash
           labelSelector:
             matchLabels:
               app: bankapp
