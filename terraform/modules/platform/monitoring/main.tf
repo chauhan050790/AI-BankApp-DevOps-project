@@ -60,10 +60,10 @@ resource "helm_release" "this" {
         resources = {
           requests = {
             cpu    = "50m"
-            memory = "128Mi"
+            memory = "256Mi"
           }
           limits = {
-            memory = "384Mi"
+            memory = "512Mi"
           }
         }
       }
