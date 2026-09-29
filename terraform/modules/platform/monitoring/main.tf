@@ -43,6 +43,13 @@ resource "helm_release" "this" {
         service = {
           type = "ClusterIP"
         }
+        sidecar = {
+          datasources = {
+            alertmanager = {
+              enabled = false
+            }
+          }
+        }
         persistence = {
           enabled          = true
           type             = "pvc"
