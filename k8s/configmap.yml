@@ -10,4 +10,6 @@ data:
   MYSQL_SSL_MODE: REQUIRED
   OLLAMA_URL: http://ollama-service:11434
   SERVER_FORWARD_HEADERS_STRATEGY: framework
-  SESSION_COOKIE_SECURE: "true"
+  # The current dev Gateway exposes HTTP only. Change this back to "true"
+  # in the same rollout that enables HTTPS.
+  SESSION_COOKIE_SECURE: "false"

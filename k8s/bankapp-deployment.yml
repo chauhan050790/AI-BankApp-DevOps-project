@@ -26,6 +26,8 @@ spec:
     metadata:
       labels:
         app: bankapp
+      annotations:
+        bankapp.dev/config-revision: "2"
     spec:
       serviceAccountName: bankapp
       automountServiceAccountToken: false
