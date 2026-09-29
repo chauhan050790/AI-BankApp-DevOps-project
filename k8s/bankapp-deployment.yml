@@ -17,8 +17,10 @@ spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
+      # The two-node dev cluster cannot schedule a third BankApp pod during
+      # updates. Replace one replica at a time while the other keeps serving.
+      maxUnavailable: 1
+      maxSurge: 0
   selector:
     matchLabels:
       app: bankapp
