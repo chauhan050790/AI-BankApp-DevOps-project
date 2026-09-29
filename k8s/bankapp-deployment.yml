@@ -39,8 +39,16 @@ spec:
           type: RuntimeDefault
       topologySpreadConstraints:
         - maxSkew: 1
+          minDomains: 2
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: bankapp
+        - maxSkew: 1
+          minDomains: 2
           topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: ScheduleAnyway
+          whenUnsatisfiable: DoNotSchedule
           labelSelector:
             matchLabels:
               app: bankapp

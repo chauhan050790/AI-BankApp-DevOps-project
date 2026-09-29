@@ -10,8 +10,9 @@ spec:
     targetRevision: dev
     path: k8s
     directory:
-      # Enable these after installing the Prometheus Operator and issuing an
-      # ACM certificate for the hostname configured in ingress.yml.
+      # Enable availability.yml after installing the Prometheus Operator.
+      # ingress.yml is the legacy ALB path; enabling it would create a second
+      # public load balancer alongside the Envoy Gateway NLB.
       exclude: "{availability.yml,ingress.yml}"
   destination:
     server: https://kubernetes.default.svc
