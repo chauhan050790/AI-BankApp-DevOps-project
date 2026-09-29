@@ -44,7 +44,7 @@ A modern banking application with an integrated AI chatbot, deployed on AWS EKS 
 | Layer | Tool |
 |-------|------|
 | **Infrastructure** | Terraform (VPC + EKS + ArgoCD) |
-| **CI Pipeline** | GitHub Actions → DockerHub |
+| **CI Pipeline** | GitHub Actions → Amazon ECR |
 | **GitOps / CD** | ArgoCD (auto-sync from `k8s/` manifests) |
 | **Ingress** | AWS Load Balancer Controller (ALB, IP targets) |
 | **TLS** | AWS Certificate Manager with HTTP-to-HTTPS redirect |
@@ -97,16 +97,17 @@ kubectl exec -n bankapp deploy/ollama -- ollama pull tinyllama
 ## CI/CD — GitOps Flow
 
 ```
-Code Push → GitHub Actions → Build & Push to DockerHub → Update k8s manifest → ArgoCD auto-sync → EKS
+Dev code push → GitHub Actions → Build and push to ECR → Update k8s manifest → Argo CD auto-sync → EKS
 ```
 
-1. Merge code changes into `main`
-2. **GitHub Actions** builds the app, pushes Docker image to DockerHub with commit SHA tag
-3. Workflow updates `k8s/bankapp-deployment.yml` with new image tag and commits back
-4. **ArgoCD** detects the manifest change and auto-syncs to EKS
-5. **EKS** performs a rolling update with zero downtime
+1. Push application changes to `dev`.
+2. **GitHub Actions** tests the app and assumes the repository-scoped AWS role through OIDC.
+3. The workflow pushes the image to `ai-bankapp-dev` in ECR with the commit SHA tag.
+4. The workflow updates `k8s/bankapp-deployment.yml` and commits the new tag to `dev`.
+5. **Argo CD** detects the manifest commit and performs the rolling update in EKS.
 
-**GitHub Secrets Required:** `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`
+The ECR role is provisioned by Terraform. No long-lived AWS access keys or
+Docker Hub credentials are required for the dev deployment workflow.
 
 ---
 
@@ -126,7 +127,7 @@ Code Push → GitHub Actions → Build & Push to DockerHub → Update k8s manife
 ├── argocd/
 │   └── application.yml     # ArgoCD Application
 ├── .github/workflows/
-│   └── gitops-ci.yml       # CI → DockerHub → manifest update
+│   └── gitops-ci.yml       # Dev CI → ECR → manifest update
 └── DEPLOYMENT.md           # Step-by-step deployment playbook
 ```
 

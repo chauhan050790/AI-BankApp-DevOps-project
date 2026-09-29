@@ -27,6 +27,10 @@ output "ecr_repository_url" {
   value = module.ecr.repository_url
 }
 
+output "github_actions_ecr_role_arn" {
+  value = module.github_actions_ecr.role_arn
+}
+
 output "argocd_namespace" {
   value = module.argocd.argocd_namespace
 }

@@ -29,6 +29,25 @@ module "ecr" {
 
 }
 
+module "github_actions_ecr" {
+  source = "../../modules/platform/github-actions-ecr"
+
+  role_name            = "${var.project_name}-${var.environment}-github-actions-ecr"
+  ecr_repository_arn   = module.ecr.repository_arn
+  github_owner         = "chauhan050790"
+  github_owner_id      = "84912584"
+  github_repository    = "AI-BankApp-DevOps-project"
+  github_repository_id = "1363530885"
+  github_branch        = "dev"
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+    ManagedBy   = "Terraform"
+    Owner       = var.owner
+  }
+}
+
 
 module "eks" {
 

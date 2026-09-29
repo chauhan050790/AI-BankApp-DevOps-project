@@ -140,6 +140,12 @@ plan/apply runs. It uses GitHub OIDC through `AWS_ROLE_TO_ASSUME`, saves the exa
 plan as a short-lived artifact, and uses a self-hosted runner for private
 production cluster access.
 
+The dev stack also provisions a separate GitHub OIDC role with push access only
+to the `ai-bankapp-dev` ECR repository. Its trust policy is restricted to this
+repository's immutable GitHub owner/repository IDs and the `dev` branch. The
+GitOps CD workflow uses the role ARN directly because IAM role ARNs are not
+secrets.
+
 Configure a GitHub Environment for every deployable environment and require
 reviewers for `prod`. The OIDC role should be scoped to this repository and the
 minimum AWS actions required by the stack.
