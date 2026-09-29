@@ -38,3 +38,11 @@ output "aws_load_balancer_controller_role_arn" {
 output "envoy_gateway_namespace" {
   value = module.envoy_gateway.namespace
 }
+
+output "monitoring_namespace" {
+  value = module.monitoring.namespace
+}
+
+output "monitoring_status" {
+  value = module.monitoring.status
+}

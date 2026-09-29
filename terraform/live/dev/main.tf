@@ -117,3 +117,12 @@ module "envoy_gateway" {
     module.aws_load_balancer_controller
   ]
 }
+
+module "monitoring" {
+  source = "../../modules/platform/monitoring"
+
+  depends_on = [
+    module.eks,
+    module.metrics_server
+  ]
+}

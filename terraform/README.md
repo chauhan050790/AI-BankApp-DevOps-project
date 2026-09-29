@@ -100,6 +100,7 @@ kubectl get deployment -n kube-system aws-load-balancer-controller
 kubectl get deployment -n kube-system metrics-server
 kubectl get pods -n argocd
 kubectl get pods -n envoy-gateway-system
+kubectl get pods -n monitoring
 kubectl get gateway,httproute -n bankapp
 kubectl get ingressclass alb
 ```
@@ -109,6 +110,17 @@ Argo CD is not directly exposed. Use a local tunnel:
 ```bash
 kubectl port-forward -n argocd svc/argocd-server 8443:443
 ```
+
+Prometheus and Grafana remain private. Open local tunnels when needed:
+
+```bash
+kubectl port-forward -n monitoring svc/kube-prometheus-kube-prome-prometheus 9090:9090
+kubectl port-forward -n monitoring svc/kube-prometheus-grafana 3000:80
+```
+
+Prometheus is then available at `http://localhost:9090` and Grafana at
+`http://localhost:3000`. The Grafana username is `admin`; retrieve its generated
+password from the `kube-prometheus-grafana` Secret and rotate it after first use.
 
 ## Gateway and TLS
 
