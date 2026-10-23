@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM eclipse-temurin:21-jdk-alpine AS build
+FROM eclipse-temurin:24-jdk-alpine AS build
 WORKDIR /workspace
 
 # Normalize the wrapper copied from Windows before running it in Linux.
@@ -16,7 +16,7 @@ COPY docker-compose.yml ./
 RUN --mount=type=cache,target=/root/.m2 \
     ./mvnw -B -ntp clean verify
 
-FROM eclipse-temurin:21-jre-alpine AS runtime
+FROM eclipse-temurin:24-jre-alpine AS runtime
 WORKDIR /app
 
 RUN addgroup -S -g 10001 bankapp \
